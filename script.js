@@ -166,14 +166,16 @@ document.addEventListener('DOMContentLoaded', function () {
   var formStatus = document.getElementById('form-status');
   var sendBtn = document.getElementById('send-btn');
 
-  // IMPORTANT: CONFIGURE YOUR EMAILJS KEYS HERE
-  // 1. Sign up at https://www.emailjs.com/
-  // 2. Add a service (e.g., Gmail)
-  // 3. Create a template
-  // 4. Replace 'YOUR_PUBLIC_KEY', 'YOUR_SERVICE_ID', and 'YOUR_TEMPLATE_ID' below.
-  if (typeof emailjs !== 'undefined') {
+  // EmailJS config is loaded from config.js.
+  // In production, GitHub Actions generates config.js from repository secrets.
+  // Do not commit real EmailJS IDs in source files.
+  // Do not use EmailJS private keys in frontend JavaScript.
+  
+  var emailConfig = window.EMAILJS_CONFIG;
+
+  if (typeof emailjs !== "undefined" && emailConfig) {
     emailjs.init({
-      publicKey: "YOUR_PUBLIC_KEY",
+      publicKey: emailConfig.PUBLIC_KEY,
     });
   }
 
@@ -231,23 +233,22 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       // Try EmailJS first
-      if (typeof emailjs !== 'undefined' && emailjs.send) {
-        // User needs to replace YOUR_SERVICE_ID and YOUR_TEMPLATE_ID
-        emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", {
+      if (typeof emailjs !== "undefined" && emailjs.send && emailConfig) {
+        emailjs.send(emailConfig.SERVICE_ID, emailConfig.TEMPLATE_ID, {
           from_name: name,
           from_email: email,
           subject: subject,
           message: message,
           to_name: "Mian Muhammad Umair Naeem"
         }).then(
-          function (response) {
+          function () {
             lastSubmitTime = Date.now();
-            showFormStatus('Thanks! Your message has been sent.', 'success');
+            showFormStatus("Thanks! Your message has been sent.", "success");
             contactForm.reset();
             resetSendBtn();
           },
-          function (error) {
-            showFormStatus('Something went wrong. Falling back to email client...', 'error');
+          function () {
+            showFormStatus("Something went wrong. Falling back to email client...", "error");
             fallbackToMailto(name, email, subject, message);
             resetSendBtn();
           }
